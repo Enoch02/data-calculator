@@ -1,0 +1,14 @@
+site:
+  title: "Data Calculator"
+
+server:
+  files:
+    dev:
+      contentRoot: "build/processedResources/js/main/public"
+      script: "build/kotlin-webpack/js/developmentExecutable/datacalc.js"
+      api: "build/libs/datacalc.jar"
+    prod:
+      script: "build/kotlin-webpack/js/productionExecutable/datacalc.js"
+      siteRoot: ".kobweb/site"
+
+  port: 8080
