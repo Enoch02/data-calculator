@@ -1,10 +1,16 @@
 package com.enoch02.datacalc.pages
 
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import com.enoch02.datacalc.HeadlineTextStyle
+import com.enoch02.datacalc.SubheadlineTextStyle
+import com.enoch02.datacalc.components.layouts.PageLayout
+import com.enoch02.datacalc.toSitePalette
 import com.varabyte.kobweb.compose.css.StyleVariable
+import com.varabyte.kobweb.compose.foundation.layout.Arrangement
 import com.varabyte.kobweb.compose.foundation.layout.Box
 import com.varabyte.kobweb.compose.foundation.layout.Column
 import com.varabyte.kobweb.compose.foundation.layout.Row
+import com.varabyte.kobweb.compose.ui.Alignment
 import com.varabyte.kobweb.compose.ui.Modifier
 import com.varabyte.kobweb.compose.ui.graphics.Color
 import com.varabyte.kobweb.compose.ui.graphics.Colors
@@ -23,16 +29,11 @@ import com.varabyte.kobweb.silk.style.toAttrs
 import com.varabyte.kobweb.silk.style.toModifier
 import com.varabyte.kobweb.silk.theme.colors.ColorMode
 import com.varabyte.kobweb.silk.theme.colors.ColorPalettes
-import org.jetbrains.compose.web.css.cssRem
-import org.jetbrains.compose.web.css.fr
-import org.jetbrains.compose.web.css.px
-import org.jetbrains.compose.web.css.vh
-import org.jetbrains.compose.web.dom.Div
-import org.jetbrains.compose.web.dom.Text
-import com.enoch02.datacalc.HeadlineTextStyle
-import com.enoch02.datacalc.SubheadlineTextStyle
-import com.enoch02.datacalc.components.layouts.PageLayout
-import com.enoch02.datacalc.toSitePalette
+import org.jetbrains.compose.web.attributes.ButtonType
+import org.jetbrains.compose.web.attributes.onSubmit
+import org.jetbrains.compose.web.attributes.type
+import org.jetbrains.compose.web.css.*
+import org.jetbrains.compose.web.dom.*
 
 // Container that has a tagline and grid on desktop, and just the tagline on mobile
 val HeroContainerStyle = CssStyle {
@@ -69,7 +70,82 @@ private fun GridCell(color: Color, row: Int, column: Int, width: Int? = null, he
 @Page
 @Composable
 fun HomePage() {
-    PageLayout("Home") {
+    var price: Int? by remember { mutableStateOf(null) }
+    var dataAmount: Int? by remember { mutableStateOf(null) }
+    var validityPeriod: Int? by remember { mutableStateOf(null) }
+    var showResult by remember { mutableStateOf(false) }
+
+    PageLayout("Calculator") {
+        H1 {
+            Text("Data Bundle Value Calculator")
+        }
+
+        Form(
+            attrs = {
+                style {
+                    display(DisplayStyle.Flex)
+                    flexDirection(FlexDirection.Column)
+                    gap(8.px)
+                }
+                onSubmit { event ->
+                    event.preventDefault()
+                }
+            },
+            content = {
+                Label { Text("Price:") }
+                NumberInput {
+                    value(price ?: 0)
+                    onInput { price = it.value?.toInt() }
+                }
+
+                Label { Text("Data Amount (GB):") }
+                NumberInput {
+                    value(dataAmount ?: 0)
+                    onInput { dataAmount = it.value?.toInt() }
+                }
+
+                Label { Text("Validity Period (Days):") }
+                NumberInput {
+                    value(validityPeriod ?: 0)
+                    onInput { validityPeriod = it.value?.toInt() }
+                }
+
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center,
+                    verticalAlignment = Alignment.CenterVertically,
+                    content = {
+                        Button(
+                            attrs = {
+                                type(ButtonType.Submit)
+                                onClick {
+                                    showResult = true
+                                }
+                                style {
+                                    marginRight(16.px)
+                                }
+                            },
+                            content = { Text("Calculate") }
+                        )
+
+                        Button(
+                            attrs = {
+                                type(ButtonType.Reset)
+                                onClick {
+                                    showResult = false
+                                }
+                            },
+                            content = { Text("Clear") }
+                        )
+                    }
+                )
+            }
+        )
+
+        if (showResult) {
+            SpanText("Results are coming soon...")
+        }
+
         Row(HeroContainerStyle.toModifier()) {
             Box {
                 val sitePalette = ColorMode.current.toSitePalette()
@@ -111,14 +187,15 @@ fun HomePage() {
                 }
             }
 
-            Div(HomeGridStyle
-                .toModifier()
-                .displayIfAtLeast(Breakpoint.MD)
-                .grid {
-                    rows { repeat(3) { size(1.fr) } }
-                    columns { repeat(5) {size(1.fr) } }
-                }
-                .toAttrs()
+            Div(
+                HomeGridStyle
+                    .toModifier()
+                    .displayIfAtLeast(Breakpoint.MD)
+                    .grid {
+                        rows { repeat(3) { size(1.fr) } }
+                        columns { repeat(5) { size(1.fr) } }
+                    }
+                    .toAttrs()
             ) {
                 val sitePalette = ColorMode.current.toSitePalette()
                 GridCell(sitePalette.brand.primary, 1, 1, 2, 2)
