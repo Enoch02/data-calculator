@@ -1,5 +1,6 @@
 site:
   title: "Data Calculator"
+  basePath: "data-calculator"
 
 server:
   files:
