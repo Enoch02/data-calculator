@@ -12,13 +12,11 @@ import com.varabyte.kobweb.compose.ui.Alignment
 import com.varabyte.kobweb.compose.ui.Modifier
 import com.varabyte.kobweb.compose.ui.graphics.Color
 import com.varabyte.kobweb.compose.ui.modifiers.*
-import com.varabyte.kobweb.compose.ui.toAttrs
 import com.varabyte.kobweb.core.Page
 import com.varabyte.kobweb.silk.components.text.SpanText
 import com.varabyte.kobweb.silk.style.CssStyle
 import com.varabyte.kobweb.silk.style.base
 import com.varabyte.kobweb.silk.style.breakpoint.Breakpoint
-import com.varabyte.kobweb.silk.style.toModifier
 import org.jetbrains.compose.web.attributes.*
 import org.jetbrains.compose.web.css.*
 import org.jetbrains.compose.web.dom.*
@@ -44,15 +42,23 @@ val HomeGridCellStyle = CssStyle.base {
         .boxShadow(blurRadius = 0.6.cssRem, color = GridCellColorVar.value())
         .borderRadius(1.cssRem)
 }
-
+//TODO: after playing around with the values, the page refuses to update. Find the cause
 @Page
 @Composable
 fun HomePage() {
     var priceInput by remember { mutableStateOf("") }
-    val price = priceInput.toDoubleOrNull()
+    val price = remember {
+        derivedStateOf {
+            priceInput.toDoubleOrNull()
+        }
+    }
 
     var dataAmountInput by remember { mutableStateOf("") }
-    val dataAmount = dataAmountInput.toDoubleOrNull()
+    val dataAmount = remember {
+        derivedStateOf {
+            dataAmountInput.toDoubleOrNull()
+        }
+    }
 
     var validityPeriod by remember { mutableStateOf<Int?>(null) }
 
@@ -122,7 +128,7 @@ fun HomePage() {
                             attrs = {
                                 type(ButtonType.Submit)
                                 onClick {
-                                    if (price != null && validityPeriod != null && dataAmount != null) {
+                                    if (price.value != null && validityPeriod != null && dataAmount.value != null) {
                                         showWarning = false
                                         showResult = true
                                     } else {
@@ -138,13 +144,13 @@ fun HomePage() {
 
                         Button(
                             attrs = {
-                                type(ButtonType.Reset)
                                 onClick {
                                     priceInput = ""
                                     dataAmountInput = ""
                                     validityPeriod = null
 
                                     showResult = false
+                                    showWarning = false
                                 }
                             },
                             content = { Text("Clear") }
@@ -156,7 +162,11 @@ fun HomePage() {
 
         //TODO: add the ability to select currencies
         if (showResult) {
-            val results = DataBundleCalculator.calculateAllMetrics(price!!, dataAmount!!, validityPeriod!!)
+            var results by remember { mutableStateOf(emptyMap<String, String>()) }
+
+            LaunchedEffect(price.value, dataAmount.value, validityPeriod) {
+                results = DataBundleCalculator.calculateAllMetrics(price.value!!, dataAmount.value!!, validityPeriod!!)
+            }
 
             Column(modifier = Modifier.fillMaxWidth()) {
                 H1 {
